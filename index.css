@@ -1,0 +1,26 @@
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background: #000;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.rt-bt {
+  position: fixed;
+  opacity: 0.6;
+  border: hidden;
+  width: 100px;
+  height: 30px;
+  top: 50px;
+  right: 50px;
+}
+
+.rt-bt:hover {
+  opacity: 1;
+  transition: 0.2s;
+}
