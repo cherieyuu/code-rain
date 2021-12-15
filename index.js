@@ -1,5 +1,5 @@
 let cvs, ctx, cw, ch;
-const textList = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "s", "t", "u", "v", "w", "x", "y", "z"];
+const textList = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "x", "y", "z"];
 const colorList = ["#f2fff1", "#c7f2c3", "#8aec80", "#51f23f", "#28bd17"]; // 渐变绿色
 
 const codeRainArr = [];
@@ -10,15 +10,22 @@ function colorCv() {
   ctx.fillRect(0, 0, cw, ch);
 }
 
+function getInitY(colNum) {
+  return -parseInt(Math.random() * 300) - colNum * step;
+}
+
 // 生成代码雨数组
 function createCodeRain() {
   for (let n = 0; n < cols; n++) {
     const col = {};
-    const basePos = parseInt(Math.random() * 300); // 列间距的偏移量
-    col.speed = parseInt(Math.random() * 3) + 1; // 速度
+    col.speed = parseInt(Math.random() * 8) + 1; // 速度
     col.colNum = parseInt(parseInt(ch / step) / (parseInt(Math.random() * 4))) + 4; // 每列的字符数
     col.x = parseInt(Math.random() * cw); // 每列的X轴位置
-    col.y = -basePos;
+    col.y = getInitY(col.colNum);
+    col.charList = [];
+    for (let i = 0; i < col.colNum; i++) {
+      col.charList.push(textList[parseInt(Math.random() * textList.length)]);
+    }
 
     codeRainArr.push(col);
   }
@@ -33,7 +40,7 @@ function codeRaining() {
     // console.log(col);
     // 如果该条数据最上字符超出页面下方则将Y坐标重置到顶部、同时随机重置X坐标，再绘制出整条数据
     if (col.y > ch) {
-      col.y = -parseInt(Math.random() * 300);
+      col.y = getInitY(col.colNum);
       col.x = parseInt(Math.random() * cw);
     } else {
       col.y += col.speed;
@@ -44,7 +51,7 @@ function codeRaining() {
       charOffset += step;
       ctx.fillStyle = i >= col.colNum - 5 ? colorList[col.colNum - i - 1] : colorList[colorList.length - 1];
       // console.log(col.x, col.y);
-      ctx.fillText(textList[parseInt(Math.random() * 11)], col.x, charOffset);
+      ctx.fillText(col.charList[i], col.x, charOffset);
     }
   })
 }
@@ -54,7 +61,7 @@ function windowResize() {
   cw = cvs.width = document.body.clientWidth;
   ch = cvs.height = document.body.clientHeight;
   ctx.font = "bold 26px Trebuchet MS"
-  cols = parseInt(cw / 14);
+  cols = parseInt(cw / 24);
 }
 
 function init() {
