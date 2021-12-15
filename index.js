@@ -1,43 +1,27 @@
-const cvs = document.getElementById("cvs");
-const ctx = cvs.getContext("2d");
-const cw = cvs.width = document.body.clientWidth;
-const ch = cvs.height = document.body.clientHeight;
+let cvs, ctx, cw, ch;
+const textList = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "s", "t", "u", "v", "w", "x", "y", "z"];
 
 const codeRainArr = [];
-const step = 16; // 每列内部数字之间的上下间隔
-const cols = parseInt(cw / 14); // 代码雨列数
-ctx.font = "bold 26px Trebuchet MS"
+let step, cols; // 每列内部数字之间的上下间隔，代码雨列数
 
 function colorCv() {
   ctx.fillStyle = "#242424";
   ctx.fillRect(0, 0, cw, ch);
 }
 
-let runId; // requestAnimationFrame的ID值，可以用来取消动画
-let changeId = 0; // 0表示codeRain画面，1表示油画画面
-
 // 生成代码雨数组
 function createCodeRain() {
   for (let n = 0; n < cols; n++) {
-    const col = [];
+    const col = {};
     const basePos = parseInt(Math.random() * 300); // 列间距的偏移量
-    const speed = parseInt(Math.random() * 5); // 速度
-    const colx = parseInt(Math.random() * cw); // 每列的X轴位置
+    col.speed = parseInt(Math.random() * 3) + 1; // 速度
+    col.colNum = parseInt(parseInt(ch / step) / (parseInt(Math.random() * 4))); // 每列的字符数
+    col.x = parseInt(Math.random() * cw); // 每列的X轴位置
+    col.y = -basePos;
 
-    const rgbg = parseInt(Math.random() * 255); // 绿色随机
-
-    const colNum = parseInt(parseInt(ch / step) / (parseInt(Math.random() * 4))); // 每列的字符数
-    for (var i = 0; i < colNum; i++) {
-      col.push({
-        x: colx,
-        y: -(step * i) - basePos,
-        speed,
-        text: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "s", "t", "u", "v", "w", "x", "y", "z"][parseInt(Math.random() * 11)],
-        color: `rgb(0, ${rgbg}, 0)`,
-      })
-    }
     codeRainArr.push(col);
   }
+  // console.log(codeRainArr);
 }
 
 // 画出代码雨
@@ -45,16 +29,45 @@ function codeRaining() {
   ctx.clearRect(0, 0, cw, ch);
   // debugger;
   codeRainArr.forEach((col) => { // 每一列
-    col.forEach((code) => { // 每个字符
-      // 如果超出下边界则重置到顶部，否则匀速下落
-      code.y > ch ? code.y = 0 : code.y += code.speed;
-      ctx.fillStyle = code.color;
-      ctx.fillText(code.text, code.x, code.y);
-    })
+    // console.log(col);
+    // 如果该条数据最上字符超出页面下方则将Y坐标重置到顶部、同时随机重置X坐标，再绘制出整条数据
+    if (col.y > ch) {
+      col.y = -parseInt(Math.random() * 300);
+      col.x = parseInt(Math.random() * cw);
+    } else {
+      col.y += col.speed;
+    }
+    let charOffset = col.y; // 记录每个字符的位置
+    for (let i = 0; i < col.colNum; i++) { // 每个字符
+      charOffset += step;
+      // ctx.fillStyle = `rgb(0, ${parseInt(Math.random() * 255)}, 0)`; //颜色为绿色随机
+      ctx.fillStyle = 'rgb(0, 100, 0)';
+      // console.log(col.x, col.y);
+      ctx.fillText(textList[parseInt(Math.random() * 11)], col.x, charOffset);
+    }
   })
-  runId = window.requestAnimationFrame(codeRaining); // 重复调用，循环下雨
-  // ctx.clearRect(0, 0, cw, ch);
+  window.requestAnimationFrame(codeRaining); // 重复调用，循环下雨
 }
 
-createCodeRain();
-runId = window.requestAnimationFrame(codeRaining);
+// 窗口resize
+function windowResize() {
+  cw = cvs.width = document.body.clientWidth;
+  ch = cvs.height = document.body.clientHeight;
+  ctx.font = "bold 26px Trebuchet MS"
+  cols = parseInt(cw / 14);
+}
+
+function init() {
+  cvs = document.getElementById("cvs");
+  if (!cvs || !cvs.getContext) return;
+
+  ctx = cvs.getContext("2d");
+  if (!ctx) return;
+
+  windowResize();
+  step = 16; 
+
+  createCodeRain();
+  window.requestAnimationFrame(codeRaining);
+  window.addEventListener("resize", windowResize, false);
+}
