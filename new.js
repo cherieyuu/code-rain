@@ -5,6 +5,10 @@ const color = {
   gradientCount: 3,
   headColor: "rgb(255, 255, 255)",
   bodyColor: "rgb(0, 255, 0)",
+  gradientColorList: ["rgb(170, 255, 170)", "rgb(85, 255, 85)"],
+  saturRange: [0, 100],
+  lightRange: [0, 50],
+  hslList : [],
 };
 
 let codeList = [];
@@ -43,13 +47,12 @@ function initTextAndColor() {
   }
   
   ctx.font = `bold ${fontSize}ps sans-serif`;
-  
-  
-  // todo: get the colorList
-  // color.gradientColorList = new Array(color.gradientCount);
-  // for (let i = 1; i < color.gradientCount; i++) {
-  //   color.gradientColorList.push()
-  // }
+
+  for (let i = color.saturRange[0]; i <= color.saturRange[1]; i++) {
+    for (let j = color.lightRange[0]; j <= color.lightRange[1]; j++) {
+      color.hslList.push(`hsl(120, ${i}%, ${j}%)`);
+    }
+  }
 }
 
 function getRandomX() {
@@ -95,7 +98,11 @@ function resize() {
     code.body = new Array(Math.ceil(Math.random() * 30) + 30 );
     for (let i = 0; i < code.body.length; i++) {
       code.body[i] = new Code({ x, y });
-      code.body[i].style.fillStyle = color.bodyColor;
+      if (i < color.gradientCount ) {
+        code.body[i].setStyle({ fillStyle: color.gradientColorList[i - 1] });
+      } else {
+        code.body[i].setStyle({ fillStyle: color.bodyColor })
+      }
     }
     codeList.push(code);
   }
@@ -114,8 +121,13 @@ function draw(timestamp) {
   
       for(let i = body.length - 1; i > 0; i--) { // 每个身子字符获得前一个字符的所有信息，字符小几率更改
         const next = body[i], pre = body[i - 1];
-        next.setCoordinate(pre.x, pre.y).setText(Math.random() < 0.05 ? getRandomText() : pre.text).setStyle(pre.style);
+        next.setCoordinate(pre.x, pre.y).setText(Math.random() < 0.05 ? getRandomText() : pre.text);
+        if (i > color.gradientCount) {
+          next.setStyle(pre.style);
+        }
       }
+      const hslRange = (color.lightRange[1] - color.lightRange[0] + 1) * (color.saturRange[1] - color.saturRange[0] + 1);
+      code.body[color.gradientCount].setStyle({ fillStyle: color.hslList[Math.floor(Math.random() * hslRange)] });
   
       if (code.y > ch) { // 当头坠出页面
         code.setCoordinate(getRandomX(), getInitY());
@@ -129,6 +141,7 @@ function draw(timestamp) {
     // 绘制
     fill(code);
     for (let i = 0; i < code.body.length; i++) {
+      if (code.body[i].y < 0) continue;
       fill(code.body[i]);
     }
   })
