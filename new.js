@@ -12,6 +12,9 @@ const color = {
 };
 
 let codeList = [];
+const pinMap = {};
+const pinStack = [];
+let pinId = 0;
 
 class Code { // 字符类，成员包括绘制坐标、要绘制的文本、样式
   x = 0;
@@ -68,7 +71,11 @@ function getInitY() {
 }
 
 function fill(text) {
-  ctx.fillStyle = text.style.fillStyle;
+  if (text.style.alpha) {
+    ctx.fillStyle = `${text.style.fillStyle.slice(0, -1)}, ${text.style.alpha})`;
+  } else {
+    ctx.fillStyle = text.style.fillStyle;
+  }
   ctx.fillText(text.text, text.x, text.y)
 }
 
@@ -85,7 +92,7 @@ function resize() {
   ch = cvs.height = document.body.clientHeight;
 
   // 根据页宽重新计算代码条数，增减绘制的CodeList数据
-  cols = Math.ceil(cw / fontSize / 4);
+  cols = Math.ceil(cw / fontSize / 3);
   while (codeList.length < cols) {
     const x = getRandomX();
     const y = getInitY();
@@ -114,11 +121,27 @@ function draw(timestamp) {
     // 更新
     if (timestamp > code.timestamp) {
       code.timestamp += code.timespan; // 下一次更新的时间
-      body = code.body;
+
+      const body = code.body;
+      const last = body[body.length - 1];
+
+      // 拖尾数据添加
+      if (last.y > 0) {
+        let pin;
+        if (pinStack.length) {
+          pin = pinStack.pop();
+        } else {
+          pin = new Code({ x: -1, y: -1 });
+          pin.id = pinId++;
+        }
+        pin.setCoordinate(last.x, last.y).setText(last.text).setStyle(last.style);
+        pin.alpha = 255;
+        pinMap[pin.id] = pin;
+      }
+      
       setCodeConf(body[0], code); // 将代码头的信息给后一个（身子第一个）
       code.setText(getRandomText()); // 代码头获得一个新的字符并下坠一个身位
       code.setCoordinate(code.x, code.y + fontSize);
-  
       for(let i = body.length - 1; i > 0; i--) { // 每个身子字符获得前一个字符的所有信息，字符小几率更改
         const next = body[i], pre = body[i - 1];
         next.setCoordinate(pre.x, pre.y).setText(Math.random() < 0.05 ? getRandomText() : pre.text);
@@ -132,19 +155,31 @@ function draw(timestamp) {
       if (code.y > ch) { // 当头坠出页面
         code.setCoordinate(getRandomX(), getInitY());
       }
-      
     }
   })
 
+  // 绘制
   ctx.clearRect(0, 0, cw, ch);
   codeList.forEach((code) => {
-    // 绘制
     fill(code);
     for (let i = 0; i < code.body.length; i++) {
       if (code.body[i].y < 0) continue;
       fill(code.body[i]);
     }
   })
+
+  // 拖尾绘制
+  for (let id in pinMap) {
+    pin = pinMap[id];
+    if (pin.alpha > 8) {
+      pin.alpha -= 5;
+      pin.setStyle({ alpha: pin.alpha / 255 });
+      fill(pin);
+    } else {
+      delete pinMap[id];
+      pinStack.push(pin);
+    }
+  }
   window.requestAnimationFrame(draw);
 }
 
