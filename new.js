@@ -48,8 +48,6 @@ function initTextAndColor() {
   for (let i = 0x30A0; i < 0x30FF; i++) {
     textList.push(String.fromCharCode(i));
   }
-  
-  ctx.font = `bold ${fontSize}ps sans-serif`;
 
   for (let i = color.saturRange[0]; i <= color.saturRange[1]; i++) {
     for (let j = color.lightRange[0]; j <= color.lightRange[1]; j++) {
@@ -76,6 +74,7 @@ function fill(text) {
   } else {
     ctx.fillStyle = text.style.fillStyle;
   }
+  ctx.font = `bold ${fontSize}px sans-serif`;
   ctx.fillText(text.text, text.x, text.y)
 }
 
